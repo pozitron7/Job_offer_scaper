@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Literal
 
 import yaml
 from dotenv import load_dotenv
@@ -21,7 +22,8 @@ class ConfigError(Exception):
 class ScrapingConfig(BaseModel):
     """Settings controlling jobs.cz scraping and pagination."""
 
-    max_pages: int = Field(default=20, ge=1)
+    max_pages: int = Field(default=70, ge=1)
+    max_jobs: int | None = Field(default=2000, ge=1)
     max_age_days: int = Field(default=3, ge=0)
     seen_streak_stop: int = Field(default=15, ge=1)
     request_delay_sec: float = Field(default=1.0, ge=0.0)
@@ -35,6 +37,7 @@ class GeminiConfig(BaseModel):
     stage2_model: str = "gemini-3.5-flash"
     stage1_batch_size: int = Field(default=75, ge=1)
     max_retries: int = Field(default=3, ge=0)
+    thinking_level: Literal["minimal", "low", "medium", "high"] | None = "low"
 
 
 class OutputConfig(BaseModel):

@@ -88,6 +88,7 @@ class GeminiMatcher:
         stage2_model: str = "gemini-3.5-flash",
         stage1_batch_size: int = 75,
         max_retries: int = 3,
+        thinking_level: str | None = "low",
         client: Any | None = None,
         base_backoff_sec: float = 1.0,
     ) -> None:
@@ -100,8 +101,26 @@ class GeminiMatcher:
         self.stage2_model = stage2_model
         self.stage1_batch_size = stage1_batch_size
         self.max_retries = max_retries
+        self.thinking_level = thinking_level
         self.base_backoff_sec = base_backoff_sec
         self._client = client if client is not None else genai.Client(api_key=api_key)
+
+    def _build_generate_config(
+        self, system_instruction: str, response_schema: type[BaseModel]
+    ) -> types.GenerateContentConfig:
+        """Build a GenerateContentConfig with optional thinking_level."""
+        thinking_config = (
+            types.ThinkingConfig(thinking_level=self.thinking_level.upper())
+            if self.thinking_level
+            else None
+        )
+        return types.GenerateContentConfig(
+            system_instruction=system_instruction,
+            response_mime_type="application/json",
+            response_schema=response_schema,
+            temperature=0.1,
+            thinking_config=thinking_config,
+        )
 
     def _call_with_retry(self, operation_name: str, fn: Callable[[], T]) -> T:
         """Execute fn with exponential backoff up to max_retries retries."""
@@ -166,12 +185,7 @@ class GeminiMatcher:
             f"Candidate CV Summary:\n{cv_summary.strip()}\n\n"
             f"Job Listings (JSON):\n{json.dumps(payload, ensure_ascii=False)}"
         )
-        config = types.GenerateContentConfig(
-            system_instruction=_STAGE1_SYSTEM_INSTRUCTION,
-            response_mime_type="application/json",
-            response_schema=Stage1Response,
-            temperature=0.1,
-        )
+        config = self._build_generate_config(_STAGE1_SYSTEM_INSTRUCTION, Stage1Response)
 
         def _invoke() -> Stage1Response:
             response = self._client.models.generate_content(
@@ -211,12 +225,7 @@ class GeminiMatcher:
             f"- URL: {detail.url}\n\n"
             f"Description:\n{detail.description.strip()}"
         )
-        config = types.GenerateContentConfig(
-            system_instruction=_STAGE2_SYSTEM_INSTRUCTION,
-            response_mime_type="application/json",
-            response_schema=Stage2Response,
-            temperature=0.1,
-        )
+        config = self._build_generate_config(_STAGE2_SYSTEM_INSTRUCTION, Stage2Response)
 
         def _invoke() -> Stage2Response:
             response = self._client.models.generate_content(

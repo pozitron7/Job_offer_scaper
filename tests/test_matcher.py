@@ -274,3 +274,36 @@ def test_exponential_backoff_sleeps_with_expected_delays(
 
     assert result.match_tier == "strong"
     assert sleep_calls == [0.5, 1.0]
+
+
+def test_thinking_level_passed_to_stage1_and_stage2() -> None:
+    from google.genai import types
+
+    client = _FakeClient(
+        [
+            SimpleNamespace(parsed=Stage1Response(keep_ids=["job-1"]), text=None),
+            SimpleNamespace(
+                parsed=Stage2Response(
+                    should_show=True,
+                    match_tier="good",
+                    reason="Solid match.",
+                ),
+                text=None,
+            ),
+        ]
+    )
+    matcher = GeminiMatcher(
+        api_key="test-key",
+        thinking_level="low",
+        client=client,
+        base_backoff_sec=0.0,
+    )
+
+    matcher.filter_titles_stage1(_make_listings(1), "Python CV")
+    matcher.evaluate_job_stage2(_make_detail(), "Python CV")
+
+    assert len(client.models.calls) == 2
+    for call in client.models.calls:
+        cfg = call["config"]
+        assert cfg.thinking_config is not None
+        assert cfg.thinking_config.thinking_level == types.ThinkingLevel.LOW

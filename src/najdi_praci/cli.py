@@ -174,6 +174,7 @@ def _run_full_pipeline(
         stage2_model=config.gemini.stage2_model,
         stage1_batch_size=config.gemini.stage1_batch_size,
         max_retries=config.gemini.max_retries,
+        thinking_level=config.gemini.thinking_level,
     )
 
     total_scraped = 0
@@ -292,6 +293,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     max_age_days = (
         args.max_age_days if args.max_age_days is not None else config.scraping.max_age_days
     )
+    limit = args.limit if args.limit is not None else config.scraping.max_jobs
 
     try:
         with JobsCzScraper(
@@ -304,7 +306,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     scraper=scraper,
                     max_pages=max_pages,
                     max_age_days=max_age_days,
-                    limit=args.limit,
+                    limit=limit,
                     dry_run=args.dry_run,
                 )
 
@@ -314,7 +316,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 run_date=run_date,
                 max_pages=max_pages,
                 max_age_days=max_age_days,
-                limit=args.limit,
+                limit=limit,
                 skip_stage2=args.skip_stage2,
                 recheck=args.recheck,
             )
