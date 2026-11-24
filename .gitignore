@@ -1,0 +1,18 @@
+# Secrets & personal data
+.env
+cv.*
+
+# Runtime directories
+data/
+reports/
+logs/
+
+# Python / virtualenv
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+dist/
+build/

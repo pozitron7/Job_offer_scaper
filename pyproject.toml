@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "najdi-praci"
+version = "0.1.0"
+description = "Daily jobs.cz scraper and Gemini CV matcher"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27.0",
+    "beautifulsoup4>=4.12.0",
+    "google-genai>=1.0.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0.0",
+    "python-dotenv>=1.0.0",
+    "pypdf>=4.0.0",
+]
+
+[project.optional-dependencies]
+playwright = [
+    "playwright>=1.45.0",
+]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[project.scripts]
+najdi-praci = "najdi_praci.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
